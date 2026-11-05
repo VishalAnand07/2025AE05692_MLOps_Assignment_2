@@ -1,0 +1,4 @@
+Prompt Version,Avg Latency,Avg Input Tokens,Avg Output Tokens,Avg Cost,Valid JSON Rate,Recommended?
+v1,3.463,43.4,448.6,0.0,0.0,No
+v2,1.999,65.4,363.2,0.0,0.0,No
+v3,0.651,99.4,112.2,0.0,1.0,Yes

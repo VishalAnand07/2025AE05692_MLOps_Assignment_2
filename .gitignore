@@ -1,0 +1,35 @@
+# Environment & Secrets (NEVER push API keys)
+.env
+.env.*
+!.env.example
+
+# Virtual Environments (Very large, thousands of files)
+.venv/
+venv/
+env/
+ENV/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Local MLflow Runtime Artifacts
+# Note: mlruns/ contains temporary run files and lockfiles
+mlruns/
+.trash/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+
+# VS Code / IDE settings (optional)
+.vscode/
+.idea/
+

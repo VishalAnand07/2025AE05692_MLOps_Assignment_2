@@ -1,0 +1,23 @@
+question_id,prompt_version,model,start_time,end_time,latency_seconds,status,input_tokens,output_tokens,total_tokens,input_cost,output_cost,cost_usd,valid_json,response
+Q1,v3,llama3.2:1b,2026-11-03T00:29:31.279,2026-11-03T00:29:31.787,0.5062,success,102,83,185,0.0,0.0,0.0,True,"{
+  ""answer"": ""Supervised learning involves training a model on labeled data, where the model learns to predict the output based on the input features. In contrast, unsupervised learning involves training a model on unlabeled data, where the model learns to identify patterns or relationships among the data."",
+  ""confidence"": ""high"",
+  ""key_points"": [""labeled"", ""unlabeled""] }"
+Q2,v3,llama3.2:1b,2026-11-03T00:29:31.787,2026-11-03T00:29:32.598,0.8111,success,98,141,239,0.0,0.0,0.0,True,"{
+  ""answer"": ""The bias-variance tradeoff is a fundamental principle in machine learning that describes the relationship between the complexity of a model and its performance on a given task. As the model's complexity increases, its performance tends to improve, but at the cost of increased bias and decreased variance. In simpler terms, as the model becomes more complex, it becomes more likely to make mistakes, but it also becomes more accurate. This tradeoff is a key consideration in the development of machine learning algorithms, as it allows for a balance between model complexity and model interpretability."",
+  ""confidence"": ""high"",
+  ""key_points"": [""bias"", ""variance"", ""complexity""] }"
+Q3,v3,llama3.2:1b,2026-11-03T00:29:32.598,2026-11-03T00:29:33.210,0.6121,success,102,108,210,0.0,0.0,0.0,True,"{
+  ""answer"": ""Overfitting is a type of model bias where a model is too complex and fits the training data too closely, resulting in poor performance on new, unseen data."",
+  ""confidence"": ""high"",
+  ""key_points"": [""Overfitting is a type of model bias where a model is too complex and fits the training data too closely, resulting in poor performance on new, unseen data."", ""Overfitting can be prevented by using techniques such as regularization, cross-validation, and early stopping.""]
+}"
+Q4,v3,llama3.2:1b,2026-11-03T00:29:33.210,2026-11-03T00:29:33.517,0.3072,success,99,52,151,0.0,0.0,0.0,True,"{
+  ""answer"": ""To evaluate the performance of a classification model by comparing the true labels with the predicted labels."",
+  ""confidence"": ""high"",
+  ""key_points"": [""evaluate"", ""classification"", ""performance"", ""confusion matrix""]
+}"
+Q5,v3,llama3.2:1b,2026-11-03T00:29:33.517,2026-11-03T00:29:34.533,1.0165,success,96,177,273,0.0,0.0,0.0,True,"{
+  ""answer"": ""Gradient descent is an optimization algorithm used to minimize the loss function in machine learning models. It works by iteratively adjusting the model's parameters to reduce the difference between the predicted output and the actual output. The algorithm starts with an initial set of parameters and iteratively updates them based on the gradient of the loss function with respect to each parameter. The update rule is given by the formula: parameter -= learning_rate * gradient. The learning rate is a hyperparameter that controls how quickly the algorithm converges to the optimal solution. The key points of gradient descent are: it is a first-order optimization algorithm, it is a stochastic algorithm, and it is a convergent algorithm."",
+  ""confidence"": ""high"",
+  ""key_points"": [""initial set of parameters"", ""gradient of the loss function"", ""learning rate"", ""convergent algorithm""] }"

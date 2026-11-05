@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>EduAssist LLMOps Report</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 18mm 20mm 18mm;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    color: #24292e;
+    font-size: 10.5pt;
+    margin: 30px auto;
+    max-width: 900px;
+  }
+  h1 {
+    font-size: 19pt;
+    border-bottom: 2px solid #eaecef;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    color: #1a202c;
+  }
+  h2 {
+    font-size: 13.5pt;
+    border-bottom: 1px solid #eaecef;
+    padding-bottom: 5px;
+    margin-top: 22px;
+    margin-bottom: 10px;
+    color: #2d3748;
+  }
+  h3 {
+    font-size: 11pt;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    color: #4a5568;
+  }
+  p, li {
+    font-size: 10pt;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 14px 0;
+    font-size: 9.5pt;
+  }
+  th, td {
+    border: 1px solid #d2d6dc;
+    padding: 7px 10px;
+    text-align: left;
+  }
+  th {
+    background-color: #f7fafc;
+    font-weight: 600;
+  }
+  tr:nth-child(even) {
+    background-color: #fcfdfe;
+  }
+  code {
+    background-color: #edf2f7;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 9pt;
+  }
+  pre {
+    background-color: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    padding: 10px;
+    overflow-x: auto;
+    font-size: 8.5pt;
+    line-height: 1.45;
+  }
+  pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+  hr {
+    border: 0;
+    height: 1px;
+    background: #e2e8f0;
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+<h1>EduAssist LLMOps: API Cost, Latency &amp; Prompt Versioning</h1>
+<p><strong>Course:</strong> Machine Learning Operations (LLMOps) AIMLCZG523<br />
+<strong>Student:</strong> <code>Vishal Anand</code> | <strong>ID:</strong> <code>2025AE05692</code> (<code>2025AE05692@wilp.bits-pilani.ac.in</code>)<br />
+<strong>Assignment:</strong> LLMOps Assignment - API Cost, Latency Benchmarking &amp; Prompt Versioning<br />
+<strong>Tracking URI:</strong> <code>sqlite:///mlflow.db</code> (<code>http://127.0.0.1:5000</code>)<br />
+<strong>Execution Backend:</strong> Local Ollama (<code>llama3.2:1b</code>) with OpenAI Python SDK compatibility layer  </p>
+<hr />
+<h2>1. Executive Summary &amp; Objective</h2>
+<p>LLMOps builds upon traditional MLOps principles by managing the lifecycle of applications driven by Large Language Models. While classical MLOps focuses on model training pipelines, dataset drift, feature stores, and weight deployment, LLMOps treats prompts, context retrieval (RAG), guardrails, and non-deterministic text outputs as first-class versioned production artifacts. Operational success in LLMOps centers around controlling API token costs, minimizing autoregressive latency, and enforcing strict output contracts.</p>
+<p>In this study, we operationalize <strong>EduAssist AI</strong>, an academic assistant answering undergraduate computer science questions. Using <strong>MLflow 3.17.2</strong> and a local inference backend powered by <strong>Ollama (<code>llama3.2:1b</code>)</strong>, we test three prompt engineering strategies across latency, token economics, schema compliance, and promotion management.</p>
+<table>
+<thead>
+<tr>
+<th>Metric / Parameter</th>
+<th style="text-align: center;">Prompt v1 (Basic)</th>
+<th style="text-align: center;">Prompt v2 (Structured)</th>
+<th style="text-align: center;">Prompt v3 (JSON Contract)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Prompt Template Purpose</strong></td>
+<td style="text-align: center;">Unconstrained baseline</td>
+<td style="text-align: center;">Persona &amp; concise framing</td>
+<td style="text-align: center;">Strict JSON schema contract</td>
+</tr>
+<tr>
+<td><strong>Average Latency</strong></td>
+<td style="text-align: center;">3.463s</td>
+<td style="text-align: center;">1.999s</td>
+<td style="text-align: center;"><strong>0.651s (-78.2% vs v1)</strong></td>
+</tr>
+<tr>
+<td><strong>Average Input Tokens</strong></td>
+<td style="text-align: center;">43.4</td>
+<td style="text-align: center;">65.4</td>
+<td style="text-align: center;">99.4</td>
+</tr>
+<tr>
+<td><strong>Average Output Tokens</strong></td>
+<td style="text-align: center;">448.6</td>
+<td style="text-align: center;">363.2</td>
+<td style="text-align: center;"><strong>112.2 (-75.0% vs v1)</strong></td>
+</tr>
+<tr>
+<td><strong>Total Average Tokens</strong></td>
+<td style="text-align: center;">492.0</td>
+<td style="text-align: center;">428.6</td>
+<td style="text-align: center;"><strong>211.6</strong></td>
+</tr>
+<tr>
+<td><strong>Valid JSON Pass Rate</strong></td>
+<td style="text-align: center;">0.0% (0/5)</td>
+<td style="text-align: center;">0.0% (0/5)</td>
+<td style="text-align: center;"><strong>100.0% (5/5)</strong></td>
+</tr>
+<tr>
+<td><strong>Marginal API Token Cost</strong></td>
+<td style="text-align: center;">$0.00 (Self-hosted)</td>
+<td style="text-align: center;">$0.00 (Self-hosted)</td>
+<td style="text-align: center;">$0.00 (Self-hosted)</td>
+</tr>
+<tr>
+<td><strong>Cloud Cost Projection (10k req)</strong></td>
+<td style="text-align: center;">$2.76</td>
+<td style="text-align: center;">$2.28</td>
+<td style="text-align: center;"><strong>$0.82 (-70.3% vs v1)</strong></td>
+</tr>
+<tr>
+<td><strong>MLflow Registry Status</strong></td>
+<td style="text-align: center;">Version 1</td>
+<td style="text-align: center;">Version 2</td>
+<td style="text-align: center;"><strong>Version 3 (@production)</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>2. Experimental Setup &amp; Questions Corpus</h2>
+<p>Testing was conducted across 5 foundational computer science questions:
+- <strong>Q1:</strong> Difference between supervised and unsupervised learning.
+- <strong>Q2:</strong> Explain the bias-variance tradeoff.
+- <strong>Q3:</strong> What is overfitting and how can it be prevented?
+- <strong>Q4:</strong> What is the purpose of a confusion matrix?
+- <strong>Q5:</strong> Explain how gradient descent works.</p>
+<p>All evaluations executed with deterministic greedy sampling (<code>temperature = 0</code>) using <code>llama3.2:1b</code> over the OpenAI Python SDK compatibility interface at <code>http://localhost:11434/v1</code>.</p>
+<hr />
+<h2>3. Task 1: API Calling &amp; Latency Measurement</h2>
+<p>For each request, precise start and end wall-clock timestamps were logged along with latency in seconds:</p>
+<h3>Task 1 Latency Benchmark Table (Prompt v1)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Question ID</th>
+<th style="text-align: center;">Model</th>
+<th style="text-align: center;">Start Time</th>
+<th style="text-align: center;">End Time</th>
+<th style="text-align: center;">Latency (s)</th>
+<th style="text-align: center;">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>Q1</strong></td>
+<td style="text-align: center;"><code>llama3.2:1b</code></td>
+<td style="text-align: center;">2026-11-03T00:29:03.911</td>
+<td style="text-align: center;">2026-11-03T00:29:11.243</td>
+<td style="text-align: center;"><strong>7.3325</strong></td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Q2</strong></td>
+<td style="text-align: center;"><code>llama3.2:1b</code></td>
+<td style="text-align: center;">2026-11-03T00:29:11.243</td>
+<td style="text-align: center;">2026-11-03T00:29:13.975</td>
+<td style="text-align: center;">2.7322</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Q3</strong></td>
+<td style="text-align: center;"><code>llama3.2:1b</code></td>
+<td style="text-align: center;">2026-11-03T00:29:13.976</td>
+<td style="text-align: center;">2026-11-03T00:29:16.536</td>
+<td style="text-align: center;">2.5604</td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Q4</strong></td>
+<td style="text-align: center;"><code>llama3.2:1b</code></td>
+<td style="text-align: center;">2026-11-03T00:29:16.536</td>
+<td style="text-align: center;">2026-11-03T00:29:18.380</td>
+<td style="text-align: center;"><strong>1.8446</strong></td>
+<td style="text-align: center;">success</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Q5</strong></td>
+<td style="text-align: center;"><code>llama3.2:1b</code></td>
+<td style="text-align: center;">2026-11-03T00:29:18.380</td>
+<td style="text-align: center;">2026-11-03T00:29:21.223</td>
+<td style="text-align: center;">2.8429</td>
+<td style="text-align: center;">success</td>
+</tr>
+</tbody>
+</table>
+<h3>Latency Summary Statistics (Prompt v1)</h3>
+<ul>
+<li><strong>Mean Latency:</strong> 3.4625 seconds</li>
+<li><strong>Median Latency:</strong> 2.7322 seconds</li>
+<li><strong>Minimum Latency:</strong> 1.8446 seconds (Q4)</li>
+<li><strong>Maximum Latency:</strong> 7.3325 seconds (Q1)</li>
+<li><strong>Standard Deviation:</strong> 2.1980 seconds</li>
+</ul>
+<h3>Interpretation of Latency Variance</h3>
+<p>The slowest request was <strong>Q1</strong> (7.3325s), while the fastest was <strong>Q4</strong> (1.8446s). The primary factor driving this variation is the autoregressive nature of LLM generation: generation latency is proportional to completion length ($O(N_{out})$). In addition, Q1 was the first request processed by the engine, incurring a runtime initialization and memory caching penalty (cold-start effect). Once the KV-cache and weights were warm in memory, subsequent responses ran steadily around 2.5–2.8 seconds.</p>
+<hr />
+<h2>4. Task 2: Token Counting &amp; Cost Economics</h2>
+<p>Token usage was extracted from the response usage metadata.</p>
+<h3>Token Usage and Cost per Request Table (Prompt v1)</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Question ID</th>
+<th style="text-align: center;">Input Tokens</th>
+<th style="text-align: center;">Output Tokens</th>
+<th style="text-align: center;">Total Tokens</th>
+<th style="text-align: center;">Input Cost ($)</th>
+<th style="text-align: center;">Output Cost ($)</th>
+<th style="text-align: center;">Cost per Request ($)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>Q1</strong></td>
+<td style="text-align: center;">46</td>
+<td style="text-align: center;">422</td>
+<td style="text-align: center;">468</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Q2</strong></td>
+<td style="text-align: center;">42</td>
+<td style="text-align: center;">497</td>
+<td style="text-align: center;">539</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Q3</strong></td>
+<td style="text-align: center;">46</td>
+<td style="text-align: center;">467</td>
+<td style="text-align: center;">513</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Q4</strong></td>
+<td style="text-align: center;">43</td>
+<td style="text-align: center;">337</td>
+<td style="text-align: center;">380</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Q5</strong></td>
+<td style="text-align: center;">40</td>
+<td style="text-align: center;">520</td>
+<td style="text-align: center;">560</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+<td style="text-align: center;">$0.000000</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Average</strong></td>
+<td style="text-align: center;"><strong>43.4</strong></td>
+<td style="text-align: center;"><strong>448.6</strong></td>
+<td style="text-align: center;"><strong>492.0</strong></td>
+<td style="text-align: center;"><strong>$0.000000</strong></td>
+<td style="text-align: center;"><strong>$0.000000</strong></td>
+<td style="text-align: center;"><strong>$0.000000</strong></td>
+</tr>
+</tbody>
+</table>
+<h3>Projected Monthly Cost (10,000 Requests)</h3>
+<p>Under the local Ollama environment, marginal token billing is <strong>$0.00/month</strong>.<br />
+When projecting onto standard commercial cloud APIs (e.g., <code>gpt-4o-mini</code> at $0.15/1M input tokens and $0.60/1M output tokens):
+$$\text{Input Cost} = \frac{43.4}{10^6} \times 0.15 = \$0.00000651$$
+$$\text{Output Cost} = \frac{448.6}{10^6} \times 0.60 = \$0.00026916$$
+$$\text{Total Cost per Request} = \$0.00027567$$
+$$\text{Projected Monthly Cost (10,000 requests)} = 10,000 \times \$0.00027567 \approx \mathbf{\$2.76\text{/month}}$$</p>
+<h3>Cost-Optimization Recommendation</h3>
+<p><strong>Enforce concise structured output and cap completion tokens:</strong> In modern LLM billing tiers, output tokens are priced 4x higher than input tokens ($0.60 vs $0.15 per million). In unconstrained prompts like v1, models produce lengthy conversational preambles and redundant summaries (averaging 448.6 completion tokens). Restricting the model to concise bullet points or schema contracts (as in v3) reduces completion length to 112.2 tokens, immediately reducing commercial operating costs from $2.76 to $0.82 per month (a <strong>70.3% recurring cost reduction</strong>).</p>
+<hr />
+<h2>5. Task 3: Prompt Versioning &amp; MLflow Evaluation</h2>
+<p>Three prompt variations were registered in the MLflow Prompt Registry under the model entity <code>eduassist_qa_prompt</code>:</p>
+<ul>
+<li><strong>Prompt v1 (Basic):</strong><br />
+<code>Answer the following student question clearly. Question: {{question}}</code></li>
+<li><strong>Prompt v2 (Structured):</strong><br />
+<code>You are an academic assistant. Answer the following student question in a clear, concise, and accurate manner. Use simple language suitable for undergraduate students. Question: {{question}}</code></li>
+<li><strong>Prompt v3 (JSON Output):</strong><br />
+<code>You are an academic assistant. Answer the student question and return ONLY valid JSON. Do not include markdown, explanations outside JSON, or code fences. Use this exact JSON schema: {"answer": "string", "confidence": "high | medium | low", "key_points": ["string"]}. Question: {{question}}</code></li>
+</ul>
+<h3>Prompt Comparison Table</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Prompt Version</th>
+<th style="text-align: center;">Avg Latency (s)</th>
+<th style="text-align: center;">Avg Input Tokens</th>
+<th style="text-align: center;">Avg Output Tokens</th>
+<th style="text-align: center;">Avg Cost ($)</th>
+<th style="text-align: center;">Valid JSON Rate</th>
+<th style="text-align: center;">Recommended?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>v1</strong></td>
+<td style="text-align: center;">3.463</td>
+<td style="text-align: center;">43.4</td>
+<td style="text-align: center;">448.6</td>
+<td style="text-align: center;">0.000000</td>
+<td style="text-align: center;">0.00 (0%)</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>v2</strong></td>
+<td style="text-align: center;">1.999</td>
+<td style="text-align: center;">65.4</td>
+<td style="text-align: center;">363.2</td>
+<td style="text-align: center;">0.000000</td>
+<td style="text-align: center;">0.00 (0%)</td>
+<td style="text-align: center;">No</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>v3</strong></td>
+<td style="text-align: center;"><strong>0.651</strong></td>
+<td style="text-align: center;"><strong>99.4</strong></td>
+<td style="text-align: center;"><strong>112.2</strong></td>
+<td style="text-align: center;"><strong>0.000000</strong></td>
+<td style="text-align: center;"><strong>1.00 (100%)</strong></td>
+<td style="text-align: center;"><strong>Yes (@production)</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>6. Promotion Justification (&gt;150 Words)</h2>
+<p>Prompt version <strong>v3</strong> is definitively selected and promoted to the <code>@production</code> alias in MLflow for the EduAssist application. In production LLMOps environments, frontend user interfaces and automated downstream grading microservices require deterministic contracts rather than unpredictable natural language paragraphs. Prompts v1 and v2 completely failed schema validation with a <strong>0.0% valid JSON rate</strong>, returning unconstrained markdown essays that break API parsing. </p>
+<p>In contrast, Prompt v3 achieved a flawless <strong>100.0% valid JSON pass rate (1.00)</strong>, adhering strictly to the required schema (<code>answer</code>, <code>confidence</code>, <code>key_points</code>). Operationally, v3 delivers outstanding performance gains: average latency drops from <strong>3.463 seconds (v1) to 0.651 seconds (v3)</strong>, representing a <strong>78.2% reduction in end-user wait time</strong>. This acceleration is directly caused by a <strong>75.0% reduction in generated completion tokens</strong> (from 448.6 tokens down to 112.2 tokens). Because autoregressive generation scales sequentially with completion tokens, eliminating conversational fluff substantially minimizes GPU memory bandwidth consumption. Furthermore, under commercial cloud billing, v3 slashes projected monthly inference expenditures by <strong>70.3%</strong> ($0.82 vs $2.76 per 10,000 queries). Prompt v3 provides superior answer precision, deterministic reliability, ultra-low latency, and optimal cost efficiency, making it the clear choice for production deployment.</p>
+<hr />
+<h2>7. Deliverables &amp; Repository Layout</h2>
+<pre><code class="language-text">files (1)/
+├── eduassist_llmops_assignment.ipynb # Full interactive Jupyter notebook with cell outputs
+├── run_evaluation.py                 # Automated end-to-end evaluation pipeline
+├── requirements.txt                  # Python dependencies (mlflow, openai, pandas, jupyter)
+├── README.md                         # Project documentation and setup guide
+├── report/
+│   ├── REPORT.md                     # Comprehensive LLMOps assignment report
+│   ├── REPORT.html                   # HTML formatted report
+│   └── EduAssist_LLMOps_Assignment_Report.pdf # Final export PDF
+├── latency_tokens_cost.csv           # Detailed granular metrics per question/run
+├── prompt_evaluation_results.csv     # Summary benchmark comparison table
+├── responses_v1.csv                  # Raw text completions from Prompt v1
+├── responses_v2.csv                  # Raw text completions from Prompt v2
+├── responses_v3.csv                  # Validated JSON completions from Prompt v3
+└── mlflow.db                         # SQLite tracking store for MLflow
+</code></pre>
+</body>
+</html>
